@@ -209,6 +209,9 @@ RUN mkdir -p /home/node/.openclaw && \
       > /home/node/.openclaw/openclaw.json && \
     chown -R node:node /home/node/.openclaw
 
+# Bake Poppy workspace files into the image
+COPY --chown=node:node workspace/ /home/node/.openclaw/workspace/
+
 USER node
 
 # Start gateway server with default config.
