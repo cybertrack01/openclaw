@@ -269,6 +269,24 @@ Send immediately. Do not batch.
 
 ---
 
+
+## Workflow 10 — Incoming SMS
+
+**Trigger:** Candidate texts +61485013024 (Poppy wakes automatically via webhook)
+
+1. Extract sender number from the message header: `Incoming SMS from +614XXXXXXXX:`
+2. Run `sms.mjs thread <number>` to read the full conversation history
+3. Look up the number in Trello to identify the candidate and their current pipeline stage
+4. If candidate not found in Trello:
+   - Reply: "Hi! This is Poppy from WOOOF Dog Grooming 🐾 Happy to help — could you let me know your name?"
+   - Create a Trello card in 📥 Applied once identified, or escalate to owner if unclear
+5. If candidate found:
+   - Continue their pipeline workflow based on current stage
+   - Treat the SMS as equivalent to a WhatsApp reply for all workflow logic
+6. After replying, add a note to their Trello card and their Seek application
+
+---
+
 ## Preference Learning
 
 After every APPROVE or DECLINE from Owner or Frederica, log to memory:
