@@ -11,9 +11,44 @@
 | Janelle Review | 👩 | Portfolio received; Janelle notified |
 | Leadership Review | 👥 | Janelle approved; Owner + Frederica notified |
 | Interview Scheduled | 📅 | Calendar invite sent |
-| Offer Stage | 🤝 | Post-interview decision underway |
+| Trial | 🧪 | Post-interview — trial shift booked |
+| Offer Stage | 🤝 | Trial passed; offer underway |
 | Hired | ✔️ | Hire confirmed |
 | Not Progressing | ❌ | Rejected at any stage |
+
+---
+
+## Card Template Structure
+
+Every candidate card follows a standard template with 4 checklists. **Create all 4 checklists immediately when creating the card** — do not wait until each stage is reached.
+
+**Checklist: Interview**
+- [ ] Portfolio sent
+- [ ] Janelle checked groomer portfolio
+- [ ] David Interviewed
+- [ ] Frederica Interviewed
+
+**Checklist: Trial**
+- [ ] Trial scheduled
+- [ ] Feedback from Sam
+- [ ] Feedback from Janelle
+
+**Checklist: Offer**
+- [ ] Offer letter sent
+- [ ] Offer letter signed
+- [ ] TFN declaration received
+- [ ] Super declaration returned
+
+**Checklist: Onboarding**
+- [ ] Create Xero record
+- [ ] Create Neko record
+- [ ] Create Timesheet record
+- [ ] Add to Rosters WhatsApp group
+- [ ] Induction scheduled
+- [ ] Training scheduled
+- [ ] Start booking dogs
+- [ ] Induction completed
+- [ ] Training completed
 
 ---
 
@@ -46,6 +81,7 @@
    - Attach CV file
    - Attach cover letter file (if present)
    - Add comment: AI summary of CV (experience type, years, breeds, location, visa status if stated, cover letter summary if present)
+   - Create all 4 checklists as per Card Template Structure above
 7. Send WhatsApp to candidate within 5 minutes of detection:
    > "Hi [Name]! 🐾 I'm Poppy, the recruitment assistant at WOOOF Dog Grooming. Thanks so much for applying! I'd love to find out a bit more about you — mind if I ask a few quick questions? Just reply YES to get started 😊"
 8. If no phone number found → send email instead with same message
@@ -101,7 +137,7 @@ Ask questions one at a time, conversationally. Wait for each reply before sendin
 1. Fetch images from link (Instagram / Facebook / Google Drive / direct)
 2. Pass to Claude vision with grooming assessment prompt:
 
-```
+\`\`\`
 You are an expert dog groomer assessing a job candidate's portfolio for a professional grooming salon.
 
 Score the candidate on three criteria (1–10 each):
@@ -115,7 +151,7 @@ WORK RANGE: Variety of breeds, evidence of volume, before/after shots, range of 
 OVERALL: STRONG PORTFOLIO / SOLID PORTFOLIO / CONCERNS NOTED / INSUFFICIENT EVIDENCE
 
 Write 2–3 sentences of specific, honest feedback per criterion. This informs a hiring decision.
-```
+\`\`\`
 
 3. Save assessment as Trello card comment
 4. Move card to 👩 Janelle Review
@@ -184,9 +220,45 @@ Write 2–3 sentences of specific, honest feedback per criterion. This informs a
 **Reminder:** Send WhatsApp to candidate 24 hours before interview:
 > "Hi [Name], friendly reminder — your interview at WOOOF Dog Grooming is tomorrow at [time AEDT]. Looking forward to meeting you! 🐾 Any questions, just reply here."
 
+**After interview:** Owner or Frederica moves card to 🧪 Trial → trigger Workflow 8.
+
 ---
 
-## Workflow 8 — Rejection
+## Workflow 8 — Trial Stage
+
+**Trigger:** Card moves to 🧪 Trial (post-interview, owner/Frederica initiates)
+
+1. WhatsApp to candidate:
+   > "Wonderful news [Name] — we'd love to invite you for a paid trial shift at WOOOF! 🐾
+   > It's a chance to meet the team and show us your magic.
+   > What days are you available in the next couple of weeks?"
+
+2. Coordinate trial shift date with owner and Frederica
+
+3. On trial date confirmed:
+   - Create Google Calendar event for trial shift
+   - Tick "Trial scheduled" on Trello checklist
+   - Notify Sam and Janelle via WhatsApp:
+     > "Hi [Sam/Janelle]! Heads up — [Name] is coming in for a trial shift on [date/time]. Could you please give them a warm welcome and let me know how they go afterwards? 🐾"
+
+4. WhatsApp reminder to candidate 24 hours before trial:
+   > "Hi [Name], just a reminder — your trial shift at WOOOF Dog Grooming is tomorrow at [time]. See you there! 🐾 Any questions, just reply here."
+
+5. After trial date passes, request feedback via WhatsApp:
+   - To Sam: "Hi Sam! How did [Name]'s trial go? Reply GREAT, OKAY, or CONCERNS with any notes you'd like to share."
+   - To Janelle: "Hi Janelle! How did [Name]'s trial go? Reply GREAT, OKAY, or CONCERNS."
+
+6. Tick "Feedback from Sam" and "Feedback from Janelle" on Trello checklist when received
+
+7. Decision logic:
+   - Both GREAT or OKAY → move to 🤝 Offer Stage → WhatsApp owner: "[Name]'s trial is complete — Sam and Janelle both gave positive feedback! Ready to make an offer?"
+   - Any CONCERNS → WhatsApp owner with both feedback responses: "Trial feedback for [Name]: Sam said [X], Janelle said [Y]. Your call on how to proceed!"
+   - Owner replies OFFER → move to 🤝 Offer Stage
+   - Owner replies DECLINE → move to ❌ Not Progressing → trigger Workflow 9
+
+---
+
+## Workflow 9 — Rejection
 
 **Trigger:** Any DECLINE decision at any stage
 
