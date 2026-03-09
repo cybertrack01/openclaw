@@ -22,7 +22,8 @@ const config = {
 
 const hooksToken = process.env.OPENCLAW_HOOKS_TOKEN;
 if (hooksToken) {
-  config.gateway.hooks = {
+  // hooks is a top-level key, not under gateway
+  config.hooks = {
     enabled: true,
     token:   hooksToken,
     mappings: [
