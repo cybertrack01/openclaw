@@ -204,13 +204,14 @@ ENV NODE_ENV=production
 # This reduces the attack surface by preventing container escape via root privileges
 
 # Create default Railway config: allow host-header origin fallback for non-loopback bind
-RUN mkdir -p /home/node/.openclaw && \
-    printf '{"gateway":{"auth":{"mode":"password","password":"WRZJvFTw3-wdf222Fk96nw"},"controlUi":{"dangerouslyAllowHostHeaderOriginFallback":true,"dangerouslyDisableDeviceAuth":true}}}\n' \
-      > /home/node/.openclaw/openclaw.json && \
-    chown -R node:node /home/node/.openclaw
+# openclaw.json is generated at container start by configure.sh from env vars
+RUN mkdir -p /home/node/.openclaw && chown -R node:node /home/node/.openclaw
 
 # Bake Poppy workspace files into the image
 COPY --chown=node:node workspace/ /home/node/.openclaw/workspace/
+
+# Make startup script executable
+RUN chmod +x /home/node/.openclaw/workspace/scripts/configure.sh
 
 USER node
 
@@ -228,4 +229,5 @@ USER node
 # For external access from host/ingress, override bind to "lan" and set auth.
 HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
+# configure.sh writes openclaw.json from env vars, then execs openclaw
+CMD ["/home/node/.openclaw/workspace/scripts/configure.sh", "node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
