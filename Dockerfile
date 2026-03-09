@@ -202,6 +202,13 @@ ENV NODE_ENV=production
 # Security hardening: Run as non-root user
 # The node:22-bookworm image includes a 'node' user (uid 1000)
 # This reduces the attack surface by preventing container escape via root privileges
+
+# Create default Railway config: allow host-header origin fallback for non-loopback bind
+RUN mkdir -p /home/node/.openclaw && \
+    printf '{"gateway":{"controlUi":{"dangerouslyAllowHostHeaderOriginFallback":true}}}\n' \
+      > /home/node/.openclaw/openclaw.json && \
+    chown -R node:node /home/node/.openclaw
+
 USER node
 
 # Start gateway server with default config.
