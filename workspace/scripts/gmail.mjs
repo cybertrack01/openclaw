@@ -55,22 +55,89 @@ if (cmd === 'list') {
     headers: { Authorization: `Bearer ${token}` }
   });
   const d = await res.json();
-  let body = '';
-  const extract = parts => { for (const p of parts || []) {
-    if (p.mimeType === 'text/plain' && p.body?.data) body += Buffer.from(p.body.data, 'base64').toString();
-    if (p.parts) extract(p.parts);
-  }};
-  if (d.payload?.body?.data) body = Buffer.from(d.payload.body.data, 'base64').toString();
+
+  let plainBody = '';
+  let htmlBody = '';
+
+  // Recursively walk all MIME parts collecting text/plain and text/html
+  const extract = parts => {
+    for (const p of parts || []) {
+      if (p.mimeType === 'text/plain' && p.body?.data) {
+        plainBody += Buffer.from(p.body.data, 'base64url').toString();
+      } else if (p.mimeType === 'text/html' && p.body?.data) {
+        htmlBody += Buffer.from(p.body.data, 'base64url').toString();
+      }
+      if (p.parts) extract(p.parts);
+    }
+  };
+
+  // Handle single-part (non-multipart) messages
+  if (d.payload?.body?.data) {
+    const decoded = Buffer.from(d.payload.body.data, 'base64url').toString();
+    if (d.payload.mimeType === 'text/html') htmlBody = decoded;
+    else plainBody = decoded;
+  }
   extract(d.payload?.parts);
+
+  // Extract all http(s) links from HTML — critical for finding Seek application URLs
+  const links = [];
+  const seen = new Set();
+  for (const m of htmlBody.matchAll(/href=["']([^"']+)["']/gi)) {
+    const href = m[1];
+    if (href.startsWith('http') && !seen.has(href)) {
+      seen.add(href);
+      links.push(href);
+    }
+  }
+  // Also catch bare URLs in plain text
+  for (const m of plainBody.matchAll(/https?:\/\/[^\s"'<>)]+/g)) {
+    if (!seen.has(m[0])) { seen.add(m[0]); links.push(m[0]); }
+  }
+
+  // Strip HTML tags for readable fallback body
+  const strippedHtml = htmlBody
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<br\s*\/?>/gi, '
+')
+    .replace(/<\/?(p|div|tr|li|h[1-6])[^>]*>/gi, '
+')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/
+{3,}/g, '
+
+')
+    .trim();
+
+  const body = plainBody.trim() || strippedHtml;
+
   const h = Object.fromEntries((d.payload?.headers || []).map(x => [x.name, x.value]));
-  console.log(JSON.stringify({ id: d.id, from: h.From, to: h.To, subject: h.Subject, date: h.Date, body: body.slice(0, 8000) }, null, 2));
+  console.log(JSON.stringify({
+    id: d.id,
+    from: h.From,
+    to: h.To,
+    subject: h.Subject,
+    date: h.Date,
+    body,
+    links,
+  }, null, 2));
 
 } else if (cmd === 'send') {
   const token = await getToken();
   const get = flag => { const i = args.indexOf(flag); return i >= 0 ? args[i+1] : null; };
   const to = get('--to'), subject = get('--subject'), body = get('--body');
   const raw = Buffer.from(
-    `From: Poppy at WOOOF Dog Grooming <${IMPERSONATE}>\nTo: ${to}\nSubject: ${subject}\nContent-Type: text/plain; charset=utf-8\n\n${body}`
+    `From: Poppy at WOOOF Dog Grooming <${IMPERSONATE}>
+To: ${to}
+Subject: ${subject}
+Content-Type: text/plain; charset=utf-8
+
+${body}`
   ).toString('base64url');
   const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
