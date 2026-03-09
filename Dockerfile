@@ -205,7 +205,7 @@ ENV NODE_ENV=production
 
 # Create default Railway config: allow host-header origin fallback for non-loopback bind
 RUN mkdir -p /home/node/.openclaw && \
-    printf '{"gateway":{"controlUi":{"dangerouslyAllowHostHeaderOriginFallback":true,"dangerouslyDisableDeviceAuth":true}}}\n' \
+    printf '{"gateway":{"auth":{"mode":"password","password":"WRZJvFTw3-wdf222Fk96nw"},"controlUi":{"dangerouslyAllowHostHeaderOriginFallback":true,"dangerouslyDisableDeviceAuth":true}}}\n' \
       > /home/node/.openclaw/openclaw.json && \
     chown -R node:node /home/node/.openclaw
 
