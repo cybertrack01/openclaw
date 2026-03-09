@@ -1,61 +1,50 @@
 #!/bin/sh
 # Generate openclaw.json from environment variables at container start.
-# This avoids baking secrets into the Docker image.
+# Uses Node.js for JSON generation to avoid shell string-escaping issues.
 set -e
 
-CONFIG_DIR="/home/node/.openclaw"
-CONFIG_FILE="$CONFIG_DIR/openclaw.json"
+node - << 'NODEOF'
+const fs   = require('fs');
+const path = '/home/node/.openclaw/openclaw.json';
 
-mkdir -p "$CONFIG_DIR"
+fs.mkdirSync('/home/node/.openclaw', { recursive: true });
 
-# Required
-GATEWAY_PASSWORD="${OPENCLAW_GATEWAY_PASSWORD:-WRZJvFTw3-wdf222Fk96nw}"
-HOOKS_TOKEN="${OPENCLAW_HOOKS_TOKEN:-}"
-
-if [ -z "$HOOKS_TOKEN" ]; then
-  # No hooks token — disable hooks
-  cat > "$CONFIG_FILE" << JSON
-{
-  "gateway": {
-    "auth": { "mode": "password", "password": "$GATEWAY_PASSWORD" },
-    "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": true,
-      "dangerouslyDisableDeviceAuth": true
-    }
-  }
-}
-JSON
-else
-  # Hooks token present — enable SMS webhook
-  cat > "$CONFIG_FILE" << JSON
-{
-  "gateway": {
-    "auth": { "mode": "password", "password": "$GATEWAY_PASSWORD" },
-    "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": true,
-      "dangerouslyDisableDeviceAuth": true
+const config = {
+  gateway: {
+    auth: {
+      mode:     'password',
+      password: process.env.OPENCLAW_GATEWAY_PASSWORD || 'WRZJvFTw3-wdf222Fk96nw',
     },
-    "hooks": {
-      "enabled": true,
-      "token": "$HOOKS_TOKEN",
-      "mappings": [
-        {
-          "id": "sms",
-          "match": { "path": "sms" },
-          "action": "agent",
-          "wakeMode": "now",
-          "name": "SMS from {{From}}",
-          "sessionKey": "hook:sms:{{From}}",
-          "messageTemplate": "Incoming SMS from {{From}}:
+    controlUi: {
+      dangerouslyAllowHostHeaderOriginFallback: true,
+      dangerouslyDisableDeviceAuth: true,
+    },
+  },
+};
 
-{{Body}}"
-        }
-      ]
-    }
-  }
+const hooksToken = process.env.OPENCLAW_HOOKS_TOKEN;
+if (hooksToken) {
+  config.gateway.hooks = {
+    enabled: true,
+    token:   hooksToken,
+    mappings: [
+      {
+        id:              'sms',
+        match:           { path: 'sms' },
+        action:          'agent',
+        wakeMode:        'now',
+        name:            'SMS from {{From}}',
+        sessionKey:      'hook:sms:{{From}}',
+        messageTemplate: 'Incoming SMS from {{From}}:
+
+{{Body}}',
+      },
+    ],
+  };
 }
-JSON
-fi
 
-echo "openclaw.json written to $CONFIG_FILE"
+fs.writeFileSync(path, JSON.stringify(config, null, 2));
+console.log('openclaw.json written to', path);
+NODEOF
+
 exec "$@"
