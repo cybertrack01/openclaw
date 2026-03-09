@@ -186,7 +186,8 @@ RUN if [ -n "$OPENCLAW_INSTALL_DOCKER_CLI" ]; then \
       gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg.asc && \
       rm -f /tmp/docker.gpg.asc && \
       chmod a+r /etc/apt/keyrings/docker.gpg && \
-      printf 'deb [arch=%s signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable\n' \
+      printf 'deb [arch=%s signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable
+' \
         "$(dpkg --print-architecture)" > /etc/apt/sources.list.d/docker.list && \
       apt-get update && \
       DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -211,7 +212,7 @@ RUN mkdir -p /home/node/.openclaw && chown -R node:node /home/node/.openclaw
 COPY --chown=node:node workspace/ /home/node/.openclaw/workspace/
 
 # Make startup script executable
-RUN chmod +x /home/node/.openclaw/workspace/scripts/configure.sh
+# configure.mjs is called via node directly, no chmod needed
 
 USER node
 
@@ -230,4 +231,4 @@ USER node
 HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 # configure.sh writes openclaw.json from env vars, then execs openclaw
-CMD ["/home/node/.openclaw/workspace/scripts/configure.sh", "node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
+CMD ["node", "/home/node/.openclaw/workspace/scripts/configure.mjs", "node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
