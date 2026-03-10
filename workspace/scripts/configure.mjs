@@ -7,6 +7,8 @@ import { spawnSync } from 'child_process';
 const CONFIG_PATH = '/home/node/.openclaw/openclaw.json';
 mkdirSync('/home/node/.openclaw', { recursive: true });
 
+const primaryModel = process.env.OPENCLAW_DEFAULT_MODEL || 'anthropic/claude-sonnet-4-6';
+
 const config = {
   gateway: {
     auth: {
@@ -16,6 +18,13 @@ const config = {
     controlUi: {
       dangerouslyAllowHostHeaderOriginFallback: true,
       dangerouslyDisableDeviceAuth: true,
+    },
+  },
+  agents: {
+    defaults: {
+      model: {
+        primary: primaryModel,
+      },
     },
   },
 };
